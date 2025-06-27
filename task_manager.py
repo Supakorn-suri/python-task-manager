@@ -8,24 +8,49 @@
 # 6. Search Tasks
 
 import uuid
+import json
 from datetime import datetime
 
 class Task:
-    def __init__(self, title, description, due_date):
-        self.id = str(uuid.uuid4())[:6]
+    def __init__(self, title, description, due_date, task_id=None, completed=False):
+        self.id = task_id if task_id else str(uuid.uuid4())[:6]
         self.title = title
         self.description = description
         self.due_date = due_date
-        self.completed = False
+        self.completed = completed
 
     def print_task(self):
         status = "✅ Completed" if self.completed else "📋 Pending"
         print(f"- ID: {self.id}\n  Title: {self.title}\n  Description: {self.description}\n  Due Date: {self.due_date}\n  Status: {status}\n")
 
+    # Convert object to dictionary for saving to JSON file 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "due_date": self.due_date,
+            "completed": self.completed
+        }
+
+    # Convert dictionary to object for loading from JSON file 
+    @staticmethod
+    def from_dict(data):
+        return Task(
+            title=data["title"],
+            description=data["description"],
+            due_date=data["due_date"],
+            task_id=data["id"],
+            completed=data["completed"]
+        )
+
 
 class TaskManager:
+    FILE_NAME = "tasks.json"
+
     def __init__(self):
         self.tasks = []
+        self.load_tasks()
 
     def add_task(self, title, description, due_date):
         if not title.strip():
@@ -38,6 +63,7 @@ class TaskManager:
             return
         task = Task(title, description, due_date)
         self.tasks.append(task)
+        self.save_tasks()
         print("✅ Task added successfully.")
 
     def view_tasks(self):
@@ -55,6 +81,7 @@ class TaskManager:
         for task in self.tasks:
             if task.id == task_id:
                 task.completed = True
+                self.save_tasks()
                 print("✅ Task marked as completed.")
                 return
         print("❌ Task not found.")
@@ -63,9 +90,23 @@ class TaskManager:
         for task in self.tasks:
             if task.id == task_id:
                 self.tasks.remove(task)
+                self.save_tasks()
                 print("🗑️ Task deleted.")
                 return
         print("❌ Task not found.")
+
+    def save_tasks(self):
+        data = [task.to_dict() for task in self.tasks]
+        with open(self.FILE_NAME, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def load_tasks(self):
+        try:
+            with open(self.FILE_NAME, "r") as f:
+                data = json.load(f)
+                self.tasks = [Task.from_dict(item) for item in data]
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.tasks = []
 
 
 def main():
