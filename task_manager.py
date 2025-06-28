@@ -107,6 +107,24 @@ class TaskManager:
                 self.tasks = [Task.from_dict(item) for item in data]
         except (FileNotFoundError, json.JSONDecodeError):
             self.tasks = []
+    
+    def search_tasks(self, keyword=None, due_date=None):
+        results = []
+        if keyword:
+            keyword = keyword.lower()
+            results = [task for task in self.tasks if keyword in task.title.lower() or keyword in task.description.lower()]
+        elif due_date:
+            results = [task for task in self.tasks if task.due_date == due_date]
+        else:
+            print("❌ Please provide a keyword or due date to search.")
+            return
+
+        if results:
+            print(f"\n🔍 Search Results ({len(results)} found):")
+            for task in results:
+                task.print_task()
+        else:
+            print("❌ No matching tasks found.")
 
 
 def main():
@@ -119,9 +137,10 @@ def main():
         print("2. View all tasks")
         print("3. Mark task as completed")
         print("4. Delete a task")
-        print("5. Exit")
+        print("5. Search tasks")
+        print("6. Exit")
 
-        choice = input("Select an option (1–5): ")
+        choice = input("Select an option (1–6): ")
 
         if choice == "1":
             title = input("Title: ")
@@ -141,6 +160,23 @@ def main():
             manager.delete_task(task_id)
 
         elif choice == "5":
+            print("\nSearch by:\n1. Keyword\n2. Due Date")
+            search_choice = input("Select option (1 or 2): ")
+            if search_choice == "1":
+                keyword = input("Enter keyword: ")
+                manager.search_tasks(keyword=keyword)
+            elif search_choice == "2":
+                due_date = input("Enter due date (YYYY-MM-DD): ")
+                # Validate date format
+                try:
+                    datetime.strptime(due_date, "%Y-%m-%d")
+                    manager.search_tasks(due_date=due_date)
+                except ValueError:
+                    print("❌ Invalid date format.")
+            else:
+                print("❌ Invalid choice.")
+
+        elif choice == "6":
             print("🔚 Exiting program.")
             break
 
