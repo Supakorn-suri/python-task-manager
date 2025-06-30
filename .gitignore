@@ -7,3 +7,6 @@ __pycache__/
 
 # macOS system files
 .DS_Store
+
+# Local task data (auto-generated, do not track)
+tasks.json
